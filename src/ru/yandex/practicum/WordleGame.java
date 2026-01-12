@@ -46,7 +46,20 @@ public class WordleGame {
     public WordleGame(WordleDictionary dictionary, PrintWriter log) {
         this.dictionary = dictionary;
         this.log = log;
-        this.answer = dictionary.getRandomWord();
+
+        // Фильтруем слова, оставляем только 5-буквенные
+        List<String> fiveLetterWords = dictionary.getWords().stream()
+                .filter(word -> word.length() == 5)
+                .collect(java.util.stream.Collectors.toList());
+
+        if (fiveLetterWords.isEmpty()) {
+            throw new IllegalStateException("В словаре нет 5-буквенных слов");
+        }
+
+        // Выбираем случайное слово из 5-буквенных
+        Random random = new Random();
+        this.answer = fiveLetterWords.get(random.nextInt(fiveLetterWords.size()));
+
         this.steps = 6;
         this.gameWon = false;
         this.guesses = new ArrayList<>();

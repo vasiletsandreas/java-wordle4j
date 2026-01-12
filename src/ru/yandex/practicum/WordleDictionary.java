@@ -123,42 +123,50 @@ public class WordleDictionary {
             throw new IllegalArgumentException("Слова разной длины");
         }
 
-        StringBuilder result = new StringBuilder();
-        char[] guessChars = guess.toCharArray();
-        char[] answerChars = answer.toCharArray();
-        boolean[] answerMatched = new boolean[answer.length()];
+        int length = guess.length();
+        char[] result = new char[length];
+        boolean[] answerUsed = new boolean[length];
+        boolean[] guessUsed = new boolean[length];
 
-        // Сначала отмечаем точные совпадения
-        for (int i = 0; i < guessChars.length; i++) {
-            if (guessChars[i] == answerChars[i]) {
-                result.append('✓'); // Правильная буква на правильном месте
-                answerMatched[i] = true;
-            } else {
-                result.append(' '); // Заполнитель для второго прохода
+        // Первый проход: точные совпадения
+        for (int i = 0; i < length; i++) {
+            if (guess.charAt(i) == answer.charAt(i)) {
+                result[i] = '✓';
+                answerUsed[i] = true;
+                guessUsed[i] = true;
             }
         }
 
-        // Затем проверяем остальные буквы
-        for (int i = 0; i < guessChars.length; i++) {
-            if (result.charAt(i) == '✓') {
-                continue; // Уже обработали
+        // Второй проход: буквы есть, но на других позициях
+        for (int i = 0; i < length; i++) {
+            if (result[i] == '✓') {
+                continue; // Уже обработано
             }
 
-            char guessChar = guessChars[i];
+            char guessChar = guess.charAt(i);
             boolean found = false;
 
-            // Ищем букву в неиспользованных позициях ответа
-            for (int j = 0; j < answerChars.length; j++) {
-                if (!answerMatched[j] && guessChar == answerChars[j]) {
-                    found = true;
-                    answerMatched[j] = true;
-                    break;
+            // Ищем букву в ответе, которая еще не использована
+            for (int j = 0; j < length; j++) {
+                if (!answerUsed[j] && guessChar == answer.charAt(j)) {
+                    // Проверяем, что эта позиция в guess еще не обработана
+                    // и что это не точное совпадение (уже обработано в первом проходе)
+                    if (!guessUsed[i]) {
+                        result[i] = '~';
+                        answerUsed[j] = true;
+                        guessUsed[i] = true;
+                        found = true;
+                        break;
+                    }
                 }
             }
 
-            result.setCharAt(i, found ? '~' : '×');
+            if (!found) {
+                result[i] = '×';
+                guessUsed[i] = true;
+            }
         }
 
-        return result.toString();
+        return new String(result);
     }
 }
