@@ -14,9 +14,13 @@ class WordleTest {
         // Используем System.out для логов в тестах
         testLog = new PrintWriter(new OutputStreamWriter(System.out));
 
-        // Создаем тестовый словарь
-        WordleDictionaryLoader loader = new WordleDictionaryLoader();
-        testDictionary = loader.loadDictionary("words_ru.txt", testLog);
+        // Создаем тестовый словарь с несколькими известными словами
+        // Вместо загрузки из файла создадим тестовый словарь вручную
+        java.util.List<String> testWords = java.util.Arrays.asList(
+                "слово", "стул", "стол", "окно", "дверь",
+                "комод", "диван", "кресло", "шкаф", "полка"
+        );
+        testDictionary = new WordleDictionary(testWords, testLog);
     }
 
     @Test
@@ -30,15 +34,21 @@ class WordleTest {
 
     @Test
     void testDictionaryContains() {
-        // Предполагаем, что в словаре есть слово "слово"
         assertTrue(testDictionary.contains("слово"));
+        assertFalse(testDictionary.contains("абвгд"));
     }
 
     @Test
     void testWordComparison() {
         String result = WordleDictionary.compareWords("стол", "стул");
-        // 'с' и 'т' на правильных местах, 'о' нет в слове, 'л' на неправильном месте
+        // с - ✓ (правильно), т - ✓ (правильно), о - × (нет в слове), л - ~ (есть, но на другой позиции)
         assertEquals("✓✓×~", result);
+
+        result = WordleDictionary.compareWords("слово", "слово");
+        assertEquals("✓✓✓✓✓", result);
+
+        result = WordleDictionary.compareWords("ааааа", "ббббб");
+        assertEquals("×××××", result);
     }
 
     @Test
@@ -49,8 +59,14 @@ class WordleTest {
     }
 
     @Test
-    void testMakeGuess() {
-        WordleGame game = new WordleGame(testDictionary, testLog);
+    void testMakeGuess() throws GameException {
+        // Создаем словарь с известным словом для теста
+        java.util.List<String> testWords = java.util.Arrays.asList("стол", "стул", "слово");
+        WordleDictionary smallDict = new WordleDictionary(testWords, testLog);
+        WordleGame game = new WordleGame(smallDict, testLog);
+
+        // Сохраняем правильный ответ
+        String answer = game.getAnswer();
 
         // Тестируем исключение при неверной длине слова
         assertThrows(GameException.class, () -> game.makeGuess("абвг"));
@@ -58,22 +74,52 @@ class WordleTest {
         // Тестируем исключение при слове не из словаря
         assertThrows(WordNotFoundInDictionaryException.class,
                 () -> game.makeGuess("абвгд"));
+
+        // Тестируем правильный ввод
+        if (answer.equals("стол")) {
+            String result = game.makeGuess("стул");
+            assertNotNull(result);
+            assertEquals(5, game.getRemainingSteps());
+        }
     }
 
     @Test
-    void testGameOver() {
-        WordleGame game = new WordleGame(testDictionary, testLog);
+    void testGameOver() throws GameException {
+        // Создаем маленький словарь для теста
+        java.util.List<String> testWords = java.util.Arrays.asList("стол", "стул", "слово");
+        WordleDictionary smallDict = new WordleDictionary(testWords, testLog);
+        WordleGame game = new WordleGame(smallDict, testLog);
+
+        String answer = game.getAnswer();
+
+        // Находим слово, которое не является правильным ответом
+        String wrongWord = testWords.stream()
+                .filter(word -> !word.equals(answer))
+                .findFirst()
+                .orElse("стол");
 
         // Симулируем 6 неверных попыток
         for (int i = 0; i < 6; i++) {
-            try {
-                game.makeGuess("стол");
-            } catch (GameException e) {
-                // Игнорируем, если слово не из словаря
-            }
+            game.makeGuess(wrongWord);
         }
 
+        assertTrue(game.isGameOver(), "Игра должна завершиться после 6 попыток");
+        assertFalse(game.isWon(), "Игрок не должен выиграть с неправильными попытками");
+        assertEquals(0, game.getRemainingSteps(), "Не должно остаться попыток");
+    }
+
+    @Test
+    void testWinGame() throws GameException {
+        // Создаем словарь с одним словом, чтобы гарантировать победу
+        java.util.List<String> testWords = java.util.Arrays.asList("слово");
+        WordleDictionary smallDict = new WordleDictionary(testWords, testLog);
+        WordleGame game = new WordleGame(smallDict, testLog);
+
+        // Делаем правильную попытку
+        game.makeGuess("слово");
+
         assertTrue(game.isGameOver());
-        assertFalse(game.isWon());
+        assertTrue(game.isWon());
+        assertEquals(5, game.getRemainingSteps()); // Одна попытка использована
     }
 }
