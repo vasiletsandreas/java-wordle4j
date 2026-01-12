@@ -3,6 +3,18 @@ package ru.yandex.practicum;
 import java.io.PrintWriter;
 import java.util.*;
 
+/*
+в этом классе хранится словарь и состояние игры
+    текущий шаг
+    всё что пользователь вводил
+    правильный ответ
+
+в этом классе нужны методы, которые
+    проанализируют совпадение слова с ответом
+    предложат слово-подсказку с учётом всего, что вводил пользователь ранее
+
+не забудьте про специальные типы исключений для игровых и неигровых ошибок
+ */
 public class WordleGame {
     private final String answer;
     private int steps;
@@ -137,18 +149,5 @@ public class WordleGame {
 
     public String getAnswer() {
         return answer;
-    }
-}
-
-// Исключения для игровых ситуаций
-class GameException extends Exception {
-    public GameException(String message) {
-        super(message);
-    }
-}
-
-class WordNotFoundInDictionaryException extends GameException {
-    public WordNotFoundInDictionaryException(String message) {
-        super(message);
     }
 }
