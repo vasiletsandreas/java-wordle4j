@@ -16,7 +16,7 @@ class WordleTest {
 
         // Создаем тестовый словарь
         WordleDictionaryLoader loader = new WordleDictionaryLoader();
-        testDictionary = loader.loadDictionary("dict.txt", testLog);
+        testDictionary = loader.loadDictionary("words_ru.txt", testLog);
     }
 
     @Test
