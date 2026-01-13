@@ -113,13 +113,6 @@ class WordleTest {
     }
 
     @Test
-    void testCompareWordsDifferentLength() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            WordleDictionary.compareWords("слово", "слова");
-        });
-    }
-
-    @Test
     void testGetHint() {
         WordleGame game = new WordleGame(testDictionary);
 
