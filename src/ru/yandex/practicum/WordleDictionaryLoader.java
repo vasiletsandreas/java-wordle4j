@@ -18,23 +18,23 @@ public class WordleDictionaryLoader {
             String line;
             while ((line = reader.readLine()) != null) {
                 String normalized = WordleDictionary.normalizeWord(line);
-                if (!normalized.isEmpty()) {
+                if (!normalized.isEmpty() && normalized.length() == 5) {
                     words.add(normalized);
                 }
             }
 
-            log.println("Загружено " + words.size() + " слов из файла " + filename);
+            log.println("Загружено " + words.size() + " пятибуквенных слов из файла " + filename);
 
         } catch (FileNotFoundException e) {
             log.println("Файл словаря не найден: " + filename);
-            throw new IOException("Файл словаря не найден: " + filename, e);
+            throw new WordNotFoundException("Файл словаря не найден: " + filename, e);
         }
 
         if (words.isEmpty()) {
             log.println("Словарь пуст");
-            throw new IOException("Словарь пуст");
+            throw new WordNotFoundException("Словарь не содержит пятибуквенных слов");
         }
 
-        return new WordleDictionary(words, log);
+        return new WordleDictionary(words);
     }
 }

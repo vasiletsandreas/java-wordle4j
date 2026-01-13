@@ -1,6 +1,5 @@
 package ru.yandex.practicum;
 
-import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -15,12 +14,15 @@ import java.util.stream.Collectors;
  */
 public class WordleDictionary {
 
-    private List<String> words;
-    private final PrintWriter log;
+    private final List<String> words;
 
-    public WordleDictionary(List<String> words, PrintWriter log) {
+    // Константы для символов сравнения
+    public static final char CORRECT_POSITION = '✓';
+    public static final char WRONG_POSITION = '~';
+    public static final char WRONG_LETTER = '×';
+
+    public WordleDictionary(List<String> words) {
         this.words = words;
-        this.log = log;
     }
 
     public int size() {
@@ -31,12 +33,10 @@ public class WordleDictionary {
         return Collections.unmodifiableList(words);
     }
 
-    public String getRandomWord() {
-        if (words.isEmpty()) {
-            throw new IllegalStateException("Словарь пуст");
-        }
-        Random random = new Random();
-        return words.get(random.nextInt(words.size()));
+    public List<String> getFiveLetterWords() {
+        return words.stream()
+                .filter(word -> word.length() == 5)
+                .collect(Collectors.toList());
     }
 
     public boolean contains(String word) {
@@ -131,7 +131,7 @@ public class WordleDictionary {
         // Первый проход: точные совпадения
         for (int i = 0; i < length; i++) {
             if (guess.charAt(i) == answer.charAt(i)) {
-                result[i] = '✓';
+                result[i] = CORRECT_POSITION;
                 answerUsed[i] = true;
                 guessUsed[i] = true;
             }
@@ -139,7 +139,7 @@ public class WordleDictionary {
 
         // Второй проход: буквы есть, но на других позициях
         for (int i = 0; i < length; i++) {
-            if (result[i] == '✓') {
+            if (result[i] == CORRECT_POSITION) {
                 continue; // Уже обработано
             }
 
@@ -152,7 +152,7 @@ public class WordleDictionary {
                     // Проверяем, что эта позиция в guess еще не обработана
                     // и что это не точное совпадение (уже обработано в первом проходе)
                     if (!guessUsed[i]) {
-                        result[i] = '~';
+                        result[i] = WRONG_POSITION;
                         answerUsed[j] = true;
                         guessUsed[i] = true;
                         found = true;
@@ -162,7 +162,7 @@ public class WordleDictionary {
             }
 
             if (!found) {
-                result[i] = '×';
+                result[i] = WRONG_LETTER;
                 guessUsed[i] = true;
             }
         }

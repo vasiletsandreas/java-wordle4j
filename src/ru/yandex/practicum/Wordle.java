@@ -2,20 +2,23 @@ package ru.yandex.practicum;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 public class Wordle {
 
+    // Константы для символов сравнения
+    public static final char CORRECT_POSITION = '✓';
+    public static final char WRONG_POSITION = '~';
+    public static final char WRONG_LETTER = '×';
+
     public static void main(String[] args) {
-        PrintWriter log = null;
-        try {
-            // Создаем лог-файл
-            log = new PrintWriter(
-                    new OutputStreamWriter(
-                            new FileOutputStream("wordle.log"),
-                            StandardCharsets.UTF_8
-                    ),
-                    true
-            );
+        try (PrintWriter log = new PrintWriter(
+                new OutputStreamWriter(
+                        new FileOutputStream("wordle.log"),
+                        StandardCharsets.UTF_8
+                ),
+                true
+        )) {
 
             log.println("Запуск игры Wordle");
 
@@ -26,12 +29,10 @@ public class Wordle {
             log.println("Словарь загружен, слов: " + dictionary.size());
 
             // Создаем игру
-            WordleGame game = new WordleGame(dictionary, log);
+            WordleGame game = new WordleGame(dictionary);
 
-            // Запускаем игровой цикл
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-
+            // Запускаем игровой цикл с использованием Scanner
+            try (Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8.name())) {
                 System.out.println("Добро пожаловать в Wordle!");
                 System.out.println("У вас есть 6 попыток, чтобы угадать слово.");
                 System.out.println("Введите слово или нажмите Enter для подсказки.");
@@ -39,7 +40,7 @@ public class Wordle {
 
                 while (!game.isGameOver()) {
                     System.out.print("Попытка " + (7 - game.getRemainingSteps()) + "/6: ");
-                    String input = reader.readLine().trim();
+                    String input = scanner.nextLine().trim();
 
                     try {
                         if (input.isEmpty()) {
@@ -70,7 +71,7 @@ public class Wordle {
                     System.out.println("Загаданное слово было: " + game.getAnswer());
                 }
 
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.println("Ошибка ввода: " + e.getMessage());
                 System.out.println("Ошибка ввода. Проверьте консоль.");
             }
@@ -79,15 +80,9 @@ public class Wordle {
 
         } catch (Exception e) {
             // Логируем все необработанные исключения
-            if (log != null) {
-                log.println("Критическая ошибка: " + e.getMessage());
-                e.printStackTrace(log);
-            }
+            System.err.println("Критическая ошибка: " + e.getMessage());
+            e.printStackTrace();
             System.out.println("Произошла ошибка в игре. Детали в лог-файле.");
-        } finally {
-            if (log != null) {
-                log.close();
-            }
         }
     }
 }

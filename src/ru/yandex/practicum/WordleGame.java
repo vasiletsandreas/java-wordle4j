@@ -1,6 +1,5 @@
 package ru.yandex.practicum;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,14 +10,15 @@ import java.util.Set;
 
 /**
  * В этом классе хранится словарь и состояние игры:
+ * <p>
  * - текущий шаг
  * - всё что пользователь вводил
  * - правильный ответ
- *
+ * <p>
  * В этом классе нужны методы, которые:
  * - проанализируют совпадение слова с ответом
  * - предложат слово-подсказку с учётом всего, что вводил пользователь ранее
- *
+ * <p>
  * Не забудьте про специальные типы исключений для игровых и неигровых ошибок.
  */
 public class WordleGame {
@@ -26,7 +26,6 @@ public class WordleGame {
     private final String answer;
     private int steps;
     private final WordleDictionary dictionary;
-    private final PrintWriter log;
     private boolean gameWon;
     private final List<String> guesses;
     private final List<String> hints;
@@ -41,16 +40,12 @@ public class WordleGame {
      * Конструктор игры.
      *
      * @param dictionary словарь слов
-     * @param log логгер для записи сообщений
      */
-    public WordleGame(WordleDictionary dictionary, PrintWriter log) {
+    public WordleGame(WordleDictionary dictionary) {
         this.dictionary = dictionary;
-        this.log = log;
 
-        // Фильтруем слова, оставляем только 5-буквенные
-        List<String> fiveLetterWords = dictionary.getWords().stream()
-                .filter(word -> word.length() == 5)
-                .collect(java.util.stream.Collectors.toList());
+        // Используем метод getFiveLetterWords для получения 5-буквенных слов
+        List<String> fiveLetterWords = dictionary.getFiveLetterWords();
 
         if (fiveLetterWords.isEmpty()) {
             throw new IllegalStateException("В словаре нет 5-буквенных слов");
@@ -69,8 +64,6 @@ public class WordleGame {
         this.wrongLetters = new HashSet<>();
         this.correctPositions = new HashMap<>();
         this.wrongPositions = new HashMap<>();
-
-        log.println("Загадано слово: " + answer);
     }
 
     /**
@@ -78,9 +71,8 @@ public class WordleGame {
      *
      * @param guess предположение игрока
      * @return результат проверки
-     * @throws GameException если произошла ошибка в игре
      */
-    public String makeGuess(String guess) throws GameException {
+    public String makeGuess(String guess) {
         if (isGameOver()) {
             throw new GameException("Игра уже завершена");
         }
@@ -108,15 +100,12 @@ public class WordleGame {
         // Проверяем, угадал ли игрок слово
         if (normalizedGuess.equals(answer)) {
             gameWon = true;
-            log.println("Игрок угадал слово: " + answer);
             return "Поздравляем! Вы угадали слово!";
         }
 
         // Анализируем совпадение
         String comparison = WordleDictionary.compareWords(normalizedGuess, answer);
         updateKnowledge(normalizedGuess, comparison);
-
-        log.println("Попытка: " + normalizedGuess + ", результат: " + comparison);
 
         return normalizedGuess + "\n" + comparison + " (осталось попыток: " + steps + ")";
     }
@@ -148,8 +137,6 @@ public class WordleGame {
         String hint = possibleWords.get(random.nextInt(possibleWords.size()));
         hints.add(hint);
 
-        log.println("Подсказка: " + hint);
-
         return hint;
     }
 
@@ -164,17 +151,17 @@ public class WordleGame {
             char guessChar = guess.charAt(i);
             char resultChar = comparison.charAt(i);
 
-            if (resultChar == '✓') {
+            if (resultChar == WordleDictionary.CORRECT_POSITION) {
                 // Правильная буква на правильном месте
                 correctLetters.add(guessChar);
                 correctPositions.put(i, guessChar);
                 // Убираем из неправильных позиций, если там была
                 wrongPositions.remove(i);
-            } else if (resultChar == '~') {
+            } else if (resultChar == WordleDictionary.WRONG_POSITION) {
                 // Правильная буква на неправильном месте
                 correctLetters.add(guessChar);
                 wrongPositions.put(i, guessChar);
-            } else if (resultChar == '×') {
+            } else if (resultChar == WordleDictionary.WRONG_LETTER) {
                 // Неправильная буква
                 wrongLetters.add(guessChar);
             }
